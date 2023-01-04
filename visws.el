@@ -1,4 +1,4 @@
-;;; visws.el --- Make whitespace visible    -*- coding: latin-1 -*-
+;;; visws.el --- Make whitespace visible
 ;;
 ;; Copyright (C) 2001 Free Software Foundation, Inc.
 ;;
@@ -28,10 +28,14 @@
 
 ;;; Code:
 
-(require 'latin1-disp)
+(defgroup visible-whitespace nil
+  "Group for visible-whitespace.")
 
 (defface visible-whitespace '((t :foreground "blue" :bold t))
   "Face for control-characters revealed by `visible-whitespace-mode'.")
+(defvar visible-whitespace 'visible-whitespace
+  "Symbol face used to make whitespace visible.")
+(make-obsolete-variable 'visible-whitespace "use the face instead." "24.4")
 
 (defcustom visible-whitespace-mappings
   '((?\n [?$ ?\n])
@@ -39,8 +43,8 @@
     ;; tab; we only use single-character graphic indicator to reduce the
     ;; number of cases where the indicator causes the tabbing to be
     ;; screwed up.
-    (?\t [?Â» ?\t] [?\\ ?\t])
-    (?   [?Â·] [?.]))
+    (?\t [?» ?\t] [?\\ ?\t])
+    (?   [?·] [?.]))
   "An alist of mappings for displaying whitespace in `visible-whitespace-mode'.
 
 The car of each mapping is a whitespace character, and the cdr is a list of
@@ -54,7 +58,7 @@ The characters in are displayed using the `visible-whitespace' face."
 (defun visws-legal-display-vector-p (vec)
   "Return true if every character in the display vector VEC can be displayed."
   (let ((i 0) (len (length vec)))
-    (while (and (< i len) (latin1-char-displayable-p (aref vec i)))
+    (while (and (< i len) (char-displayable-p (aref vec i)))
       (setq i (1+ i)))
     (= i len)))
 
@@ -62,34 +66,43 @@ The characters in are displayed using the `visible-whitespace' face."
 ;; a local display table or not.
 (defvar visws-display-table-was-local nil)
 
+(defvar visws-font-lock-keywords nil
+  "Used to save keywords adds to `font-lock-keywords'.")
+
+;;;###autoload
 (define-minor-mode visible-whitespace-mode
-  "Toggle Visible Whitespace mode
+  "Toggle Visible Whitespace mode.
 When active, normally invisible whitespace characters are made visible.
 
 With prefix argument ARG, turn on if positive, otherwise off.
 Returns non-nil if the new state is enabled."
-  nil
-  " VisWS"
-  nil
-  (if visible-whitespace-mode
-      (let ((face-bits (ash (face-id 'visible-whitespace) 19)))
-		(set (make-local-variable 'visws-display-table-was-local)
-			 buffer-display-table)
-		(unless buffer-display-table
-		  (setq buffer-display-table (make-display-table)))
-		(dolist (entry visible-whitespace-mappings)
-		  (let ((vecs (cdr entry)))
-			(while (and vecs (not (visws-legal-display-vector-p (car vecs))))
-			  (setq vecs (cdr vecs)))
-			(when vecs
-			  (let ((vec (copy-sequence (car vecs))))
-				(dotimes (i (length vec))
-				  (when (not (eq (aref vec i) (car entry)))
-					(aset vec i (logior (aref vec i) face-bits))))
-				(aset buffer-display-table (car entry) vec))))))
+  :init-value nil
+  :lighter " VisWS"
+  :keymap nil
+  (when visible-whitespace-mode
+    (setq-local visws-font-lock-keywords nil)
+    (set (make-local-variable 'visws-display-table-was-local)
+         buffer-display-table)
+    (unless buffer-display-table
+      (setq buffer-display-table (make-display-table)))
+    (let ((keywords '()))
+      (dolist (entry visible-whitespace-mappings)
+        (let ((vecs (cdr entry)))
+          (while (and vecs (not (visws-legal-display-vector-p (car vecs))))
+            (setq vecs (cdr vecs)))
+          (when vecs
+            (add-to-list 'keywords `(,(format "%c" (car entry)) (0 visible-whitespace t)))
+            (aset buffer-display-table (car entry) (copy-sequence (car vecs))))))
+      (setq visws-font-lock-keywords keywords)
+      (font-lock-add-keywords nil keywords t)))
+  (unless visible-whitespace-mode
+    (print (format "%s" visws-font-lock-keywords))
     (if visws-display-table-was-local
-		(dolist (entry visible-whitespace-mappings)
-		  (aset buffer-display-table (car entry) nil))
-      (setq buffer-display-table nil))))
+        (dolist (entry visible-whitespace-mappings)
+          (aset buffer-display-table (car entry) nil))
+      (setq buffer-display-table nil))
+    (font-lock-remove-keywords nil visws-font-lock-keywords)))
+
+(provide 'visws)
 
 ;;; visws.el ends here
