@@ -29,11 +29,15 @@ jobs:
         uses: mikefarah/yq@master
         with:
           cmd: |
+            set -eux
             diffdir='.github/sync-diff'
             mkdir -p "${diffdir}"
             yq '.[].[]' .github/sync.yml | while read diff; do
               file="$(printf '%s' "${diff}" | sed 's#\.github/sync-diff/\(.*\)\.diff#\1#')"
-              diff -u "dst/${file}" "${file}" > "${diff}"
+              diff --unified \
+                --label="${{ github.repository }}/${file}" "dst/${file}" \
+                --label="emacsmirror/emacswiki.org/${file}" "${file}" \
+                > "${diff}"
             done
             echo dummy
       - name: Run GitHub File Diff Sync
