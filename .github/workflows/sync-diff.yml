@@ -12,15 +12,19 @@ jobs:
         with:
           repository: emacsmirror/emacswiki.org
           ref: master
+      - name: Checkout Repository to Copy Settings
+        uses: actions/checkout@master
+        with:
+          path: dst
+      - name: Copy Settings
+        run: |
+          mkdir -p .github
+          cp dst/.github/sync.yml .github/
       - name: Checkout Repository
         uses: actions/checkout@master
         with:
           path: dst
           ref: master
-      - name: Copy Settings
-        run: |
-          mkdir -p .github
-          cp dst/.github/sync.yml .github/
       - name: Generate Diffs
         uses: mikefarah/yq@master
         with:
