@@ -30,6 +30,7 @@ jobs:
         with:
           cmd: |
             echo HELLO
+            yq '.[]' .github/sync.yml
             yq . .github/sync.yml
       - name: Run GitHub File Diff Sync
         uses: BetaHuhn/repo-file-sync-action@latest
