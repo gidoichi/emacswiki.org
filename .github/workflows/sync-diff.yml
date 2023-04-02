@@ -29,8 +29,8 @@ jobs:
         uses: mikefarah/yq@master
         with:
           cmd: |
-            echo HELLO
-            yq '.[]' .github/sync.yml
+            cat .github/sync.yml > test.yml
+            yq '.' test.yml
             yq . .github/sync.yml
       - name: Run GitHub File Diff Sync
         uses: BetaHuhn/repo-file-sync-action@latest
