@@ -36,11 +36,16 @@ jobs:
             yq '.[].[]' .github/sync.yml | while read diff; do
               file="$(printf '%s' "${diff}" | sed 's#\.github/sync-diff/\(.*\)\.diff#\1#')"
               (
+                set +e
                 set -x
                 diff -u \
                   --label="${{ github.repository }}/${file}" "dst/${file}" \
                   --label="emacsmirror/emacswiki.org/${file}" "${file}" \
                   > "${diff}"
+                code="$?"
+                if [ "${code}" -ge 2 ]; then
+                  return "${code}"
+                fi
               )
             done
       - name: Run GitHub File Diff Sync
