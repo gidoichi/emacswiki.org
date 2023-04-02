@@ -29,11 +29,18 @@ jobs:
         uses: mikefarah/yq@master
         with:
           cmd: |
-            cat .github/sync.yml > test.yml
-            yq '.' test.yml
+            diffdir='.github/sync-diff'
+            mkdir -p "${diffdir}"
+            yq . .github/sync.yml | while read diff; do
+              file="$(printf '%s' "${diff}" | sed 's#\.github/sync-diff/\(.*\)\.diff#\1#')"
+              diff "dst/${file}" "${file}" > "${diff}"
+              cat "${diff}" 1>&2
+              cat "${diff}"
+            done
             yq . .github/sync.yml
       - name: Run GitHub File Diff Sync
         uses: BetaHuhn/repo-file-sync-action@latest
         with:
           GH_PAT: ${{ secrets.GH_PAT }}
           DRY_RUN: true
+          PR_BODY: 'synced local file(s) with [traefik/traefik-helm-chart](${{ github.server_url }}/traefik/traefik-helm-chart).'
