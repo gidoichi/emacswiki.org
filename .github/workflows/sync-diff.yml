@@ -31,7 +31,7 @@ jobs:
           cmd: |
             diffdir='.github/sync-diff'
             mkdir -p "${diffdir}"
-            yq . .github/sync.yml | while read diff; do
+            yq '.[].[]' .github/sync.yml | while read diff; do
               file="$(printf '%s' "${diff}" | sed 's#\.github/sync-diff/\(.*\)\.diff#\1#')"
               diff "dst/${file}" "${file}" > "${diff}"
               cat "${diff}" 1>&2
