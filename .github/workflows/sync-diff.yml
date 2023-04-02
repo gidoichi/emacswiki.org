@@ -7,3 +7,28 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Source Repository
+        uses: actions/checkout@master
+        with:
+          repository: emacsmirror/emacswiki.org
+          ref: master
+      - name: Checkout Repository
+        uses: actions/checkout@master
+        with:
+          path: dst
+          ref: master
+      - name: Copy Settings
+        run: |
+          mkdir -p .github
+          cp dst/.github/sync.yml .github/
+      - name: Generate Diffs
+        uses: mikefarah/yq@master
+        with:
+          cmd: |
+            echo HELLO
+            yq . .github/sync.yml
+      - name: Run GitHub File Diff Sync
+        uses: BetaHuhn/repo-file-sync-action@latest
+        with:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          DRY_RUN: true
