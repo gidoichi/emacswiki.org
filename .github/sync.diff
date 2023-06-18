@@ -1,5 +1,7 @@
---- gidoichi/emacswiki.org/visws.el
-+++ emacsmirror/emacswiki.org/visws.el
+diff --git a/visws.el b/visws.el
+index ac92d07..696e9d2 100644
+--- a/visws.el
++++ b/visws.el
 @@ -1,4 +1,4 @@
 -;;; visws.el --- Make whitespace visible
 +;;; visws.el --- Make whitespace visible    -*- coding: latin-1 -*-
@@ -33,7 +35,7 @@
    "An alist of mappings for displaying whitespace in `visible-whitespace-mode'.
  
  The car of each mapping is a whitespace character, and the cdr is a list of
-@@ -58,7 +54,7 @@
+@@ -58,7 +54,7 @@ The characters in are displayed using the `visible-whitespace' face."
  (defun visws-legal-display-vector-p (vec)
    "Return true if every character in the display vector VEC can be displayed."
    (let ((i 0) (len (length vec)))
@@ -42,7 +44,7 @@
        (setq i (1+ i)))
      (= i len)))
  
-@@ -66,43 +62,34 @@
+@@ -66,43 +62,34 @@ The characters in are displayed using the `visible-whitespace' face."
  ;; a local display table or not.
  (defvar visws-display-table-was-local nil)
  
