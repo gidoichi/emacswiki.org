@@ -7,49 +7,32 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Repository to Copy Settings
+        uses: actions/checkout@master
+        with:
+          path: repo
       - name: Checkout Source Repository
         uses: actions/checkout@master
         with:
           repository: emacsmirror/emacswiki.org
           ref: master
-      - name: Checkout Repository to Copy Settings
-        uses: actions/checkout@master
-        with:
-          path: dst
-      - name: Copy Settings
+          path: emacswiki.org
+      - name: Sync files
         run: |
-          mkdir -p .github
-          cp dst/.github/sync.yml .github/
-      - name: Checkout Repository
-        uses: actions/checkout@master
+          set -eux
+
+          cp "./emacswiki.org/visws.el" "./repo/visws.el"
+
+          (
+              cd 'repo'
+              git diff > ../sync.diff
+              git checkout .
+          )
+          mv ./sync.diff ./repo/.github/
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@main
         with:
-          path: dst
-          ref: master
-      - name: Generate Diffs
-        uses: mikefarah/yq@master
-        with:
-          cmd: |
-            set -eu
-            echo dummy
-            diffdir='.github/sync-diff'
-            mkdir -p "${diffdir}"
-            yq '.[].[]' .github/sync.yml | while read diff; do
-              file="$(printf '%s' "${diff}" | sed 's#\.github/sync-diff/\(.*\)\.diff#\1#')"
-              (
-                set +e
-                set -x
-                diff -u \
-                  --label="${{ github.repository }}/${file}" "dst/${file}" \
-                  --label="emacsmirror/emacswiki.org/${file}" "${file}" \
-                  > "${diff}"
-                code="$?"
-                if [ "${code}" -ge 2 ]; then
-                  return "${code}"
-                fi
-              )
-            done
-      - name: Run GitHub File Diff Sync
-        uses: BetaHuhn/repo-file-sync-action@latest
-        with:
-          GH_PAT: ${{ secrets.GH_PAT }}
-          PR_BODY: 'synced local diff file(s) with [emacsmirror/emacswiki.org](${{ github.server_url }}/emacsmirror/emacswiki.org).'
+          branch: 'bot/update-diff'
+          delete-branch: true
+          labels: update
+          title: 'Update .github/sync.diff by create-pull-request action'
