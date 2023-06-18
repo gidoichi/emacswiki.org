@@ -35,4 +35,5 @@ jobs:
           branch: 'bot/update-diff'
           delete-branch: true
           labels: update
+          path: repo
           title: 'Update .github/sync.diff by create-pull-request action'
